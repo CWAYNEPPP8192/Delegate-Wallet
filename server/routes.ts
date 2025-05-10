@@ -10,6 +10,7 @@ import {
   insertTransactionSchema 
 } from "@shared/schema";
 import { ZodError } from "zod";
+import { aiService } from "./services/aiService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Error handling middleware
@@ -227,6 +228,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const teamId = parseInt(req.query.teamId as string);
       const transactions = await storage.listTransactions(teamId);
       res.json(transactions);
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
+
+  // AI Features
+
+  // Analyze spending patterns
+  app.post('/api/ai/analyze-spending', async (req, res) => {
+    try {
+      const { teamId, timeframe } = req.body;
+      
+      if (!teamId) {
+        return res.status(400).json({ message: 'Team ID is required' });
+      }
+      
+      const transactions = await storage.listTransactions(parseInt(teamId));
+      const analysis = await aiService.analyzeSpending(transactions, timeframe);
+      
+      res.json(analysis);
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
+
+  // Get smart delegation suggestions
+  app.post('/api/ai/suggest-delegations', async (req, res) => {
+    try {
+      const { teamId } = req.body;
+      
+      if (!teamId) {
+        return res.status(400).json({ message: 'Team ID is required' });
+      }
+      
+      const teamMembers = await storage.listTeamMembers(parseInt(teamId));
+      const delegations = await storage.listDelegations(parseInt(teamId));
+      const transactions = await storage.listTransactions(parseInt(teamId));
+      
+      const suggestions = await aiService.suggestDelegations(
+        teamMembers,
+        delegations,
+        transactions
+      );
+      
+      res.json(suggestions);
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
+
+  // Review a delegation
+  app.post('/api/ai/review-delegation', async (req, res) => {
+    try {
+      const delegationData = req.body;
+      
+      if (!delegationData) {
+        return res.status(400).json({ message: 'Delegation data is required' });
+      }
+      
+      const review = await aiService.reviewDelegation(delegationData);
+      res.json({ review });
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
+
+  // Generate team report
+  app.get('/api/ai/team-report/:teamId', async (req, res) => {
+    try {
+      const teamId = parseInt(req.params.teamId);
+      
+      if (!teamId) {
+        return res.status(400).json({ message: 'Team ID is required' });
+      }
+      
+      const transactions = await storage.listTransactions(teamId);
+      const delegations = await storage.listDelegations(teamId);
+      const teamMembers = await storage.listTeamMembers(teamId);
+      
+      const report = await aiService.generateTeamReport(
+        teamId,
+        transactions,
+        delegations,
+        teamMembers
+      );
+      
+      res.json({ report });
     } catch (err) {
       handleError(err, res);
     }
