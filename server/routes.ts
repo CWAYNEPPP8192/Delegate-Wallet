@@ -244,9 +244,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Team ID is required' });
       }
       
-      const transactions = await storage.listTransactions(parseInt(teamId));
-      const analysis = await aiService.analyzeSpending(transactions, timeframe);
-      
+      const analysis = await aiService.analyzeSpending(parseInt(teamId), timeframe);
       res.json(analysis);
     } catch (err) {
       handleError(err, res);
@@ -262,16 +260,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Team ID is required' });
       }
       
-      const teamMembers = await storage.listTeamMembers(parseInt(teamId));
-      const delegations = await storage.listDelegations(parseInt(teamId));
-      const transactions = await storage.listTransactions(parseInt(teamId));
-      
-      const suggestions = await aiService.suggestDelegations(
-        teamMembers,
-        delegations,
-        transactions
-      );
-      
+      const suggestions = await aiService.suggestDelegations(parseInt(teamId));
       res.json(suggestions);
     } catch (err) {
       handleError(err, res);
@@ -295,25 +284,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Generate team report
-  app.get('/api/ai/team-report/:teamId', async (req, res) => {
+  app.post('/api/ai/team-report', async (req, res) => {
     try {
-      const teamId = parseInt(req.params.teamId);
+      const { teamId, reportType } = req.body;
       
       if (!teamId) {
         return res.status(400).json({ message: 'Team ID is required' });
       }
       
-      const transactions = await storage.listTransactions(teamId);
-      const delegations = await storage.listDelegations(teamId);
-      const teamMembers = await storage.listTeamMembers(teamId);
-      
-      const report = await aiService.generateTeamReport(
-        teamId,
-        transactions,
-        delegations,
-        teamMembers
-      );
-      
+      const report = await aiService.generateTeamReport(parseInt(teamId), reportType);
       res.json({ report });
     } catch (err) {
       handleError(err, res);
