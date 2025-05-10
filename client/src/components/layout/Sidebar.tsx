@@ -6,7 +6,8 @@ import {
   ClipboardList, 
   Banknote, 
   Settings,
-  ChevronRight
+  ChevronRight,
+  RefreshCw
 } from "lucide-react";
 import { useWallet } from "@/providers/WalletProvider";
 import { shortenAddress } from "@/lib/wallet";
@@ -36,6 +37,11 @@ export function Sidebar() {
       label: "Transactions",
       href: "/transactions",
       icon: <Banknote className="h-5 w-5 mr-3" />,
+    },
+    {
+      label: "Subscriptions",
+      href: "/subscriptions",
+      icon: <RefreshCw className="h-5 w-5 mr-3" />,
     }
   ];
 
