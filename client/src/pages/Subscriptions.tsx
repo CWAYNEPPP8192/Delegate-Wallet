@@ -238,9 +238,9 @@ export default function Subscriptions() {
   // Use real data when available, fallback to mock data for development
   const displaySubscriptions = subscriptions || mockSubscriptions;
   
-  const activeSubscriptions = displaySubscriptions.filter(s => s.status === 'active');
-  const pausedSubscriptions = displaySubscriptions.filter(s => s.status === 'paused');
-  const completedSubscriptions = displaySubscriptions.filter(s => 
+  const activeSubscriptions = displaySubscriptions.filter((s: any) => s.status === 'active');
+  const pausedSubscriptions = displaySubscriptions.filter((s: any) => s.status === 'paused');
+  const completedSubscriptions = displaySubscriptions.filter((s: any) => 
     s.status === 'completed' || s.status === 'cancelled'
   );
 
@@ -288,7 +288,7 @@ export default function Subscriptions() {
             </div>
           ) : activeSubscriptions.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {activeSubscriptions.map(subscription => (
+              {activeSubscriptions.map((subscription: any) => (
                 <SubscriptionCard key={subscription.id} subscription={subscription} />
               ))}
             </div>
@@ -309,7 +309,7 @@ export default function Subscriptions() {
         <TabsContent value="paused">
           {pausedSubscriptions.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {pausedSubscriptions.map(subscription => (
+              {pausedSubscriptions.map((subscription: any) => (
                 <SubscriptionCard key={subscription.id} subscription={subscription} />
               ))}
             </div>
@@ -329,7 +329,7 @@ export default function Subscriptions() {
         <TabsContent value="completed">
           {completedSubscriptions.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {completedSubscriptions.map(subscription => (
+              {completedSubscriptions.map((subscription: any) => (
                 <SubscriptionCard key={subscription.id} subscription={subscription} />
               ))}
             </div>
