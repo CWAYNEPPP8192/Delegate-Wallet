@@ -62,9 +62,10 @@ export function AIAssistantCard() {
   ];
 
   // AI Assistant API query
-  const assistantMutation = useMutation({
-    mutationFn: async (params: { endpoint: string; data: any }) => {
-      return apiRequest("POST", params.endpoint, params.data);
+  const assistantMutation = useMutation<any, Error, { endpoint: string; data: any }>({
+    mutationFn: async (params) => {
+      const response = await apiRequest("POST", params.endpoint, params.data);
+      return await response.json();
     },
     onSuccess: (data) => {
       setIsThinking(false);
