@@ -7,7 +7,9 @@ import {
   insertTeamMemberSchema, 
   insertDelegationSchema, 
   insertPaymentStreamSchema, 
-  insertTransactionSchema 
+  insertTransactionSchema,
+  insertSubscriptionSchema,
+  insertSubscriptionCategorySchema
 } from "@shared/schema";
 import { ZodError } from "zod";
 import { aiService } from "./services/aiService";
@@ -228,6 +230,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const teamId = parseInt(req.query.teamId as string);
       const transactions = await storage.listTransactions(teamId);
       res.json(transactions);
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
+  
+  // Subscription routes
+  app.post('/api/subscriptions', async (req, res) => {
+    try {
+      const subscriptionData = insertSubscriptionSchema.parse(req.body);
+      const newSubscription = await storage.createSubscription(subscriptionData);
+      res.status(201).json(newSubscription);
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
+  
+  app.get('/api/subscriptions', async (req, res) => {
+    try {
+      const teamId = req.query.teamId ? parseInt(req.query.teamId as string) : undefined;
+      const userAddress = req.query.userAddress as string;
+      
+      let subscriptions;
+      if (teamId) {
+        subscriptions = await storage.listSubscriptions(teamId);
+      } else if (userAddress) {
+        subscriptions = await storage.listSubscriptionsByUser(userAddress);
+      } else {
+        return res.status(400).json({ message: 'Either teamId or userAddress is required' });
+      }
+      
+      res.json(subscriptions);
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
+  
+  app.get('/api/subscriptions/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const subscription = await storage.getSubscription(id);
+      
+      if (!subscription) {
+        return res.status(404).json({ message: 'Subscription not found' });
+      }
+      
+      res.json(subscription);
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
+  
+  app.patch('/api/subscriptions/:id/status', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { status } = req.body;
+      
+      if (!status || !['active', 'paused', 'cancelled', 'completed'].includes(status)) {
+        return res.status(400).json({ 
+          message: 'Valid status (active, paused, cancelled, completed) is required' 
+        });
+      }
+      
+      const updatedSubscription = await storage.updateSubscriptionStatus(id, status);
+      res.json(updatedSubscription);
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
+  
+  app.post('/api/subscriptions/:id/increment-payment', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updatedSubscription = await storage.incrementSubscriptionPaymentCount(id);
+      res.json(updatedSubscription);
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
+  
+  // Subscription Categories routes
+  app.post('/api/subscription-categories', async (req, res) => {
+    try {
+      const categoryData = insertSubscriptionCategorySchema.parse(req.body);
+      const newCategory = await storage.createSubscriptionCategory(categoryData);
+      res.status(201).json(newCategory);
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
+  
+  app.get('/api/subscription-categories', async (req, res) => {
+    try {
+      const categories = await storage.listSubscriptionCategories();
+      res.json(categories);
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
+  
+  app.get('/api/subscription-categories/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const category = await storage.getSubscriptionCategory(id);
+      
+      if (!category) {
+        return res.status(404).json({ message: 'Category not found' });
+      }
+      
+      res.json(category);
     } catch (err) {
       handleError(err, res);
     }

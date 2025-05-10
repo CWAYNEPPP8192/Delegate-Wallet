@@ -7,6 +7,7 @@ import Dashboard from "@/pages/Dashboard";
 import TeamMembers from "@/pages/TeamMembers";
 import Delegations from "@/pages/Delegations";
 import Transactions from "@/pages/Transactions";
+import Subscriptions from "@/pages/Subscriptions";
 import Settings from "@/pages/Settings";
 import { AppShell } from "./components/layout/AppShell";
 import { ConnectWalletModal } from "./components/wallet/ConnectWalletModal";
@@ -37,6 +38,7 @@ function App() {
           <Route path="/team-members" component={TeamMembers} />
           <Route path="/delegations" component={Delegations} />
           <Route path="/transactions" component={Transactions} />
+          <Route path="/subscriptions" component={Subscriptions} />
           <Route path="/settings" component={Settings} />
           <Route component={NotFound} />
         </Switch>
