@@ -130,6 +130,72 @@ export const insertTransactionSchema = createInsertSchema(transactions).pick({
   status: true,
 });
 
+// Subscription model - represents a delegated subscription
+export const subscriptions = pgTable("subscriptions", {
+  id: serial("id").primaryKey(),
+  teamId: integer("team_id").notNull().references(() => teams.id),
+  delegationId: integer("delegation_id").references(() => delegations.id),
+  name: text("name").notNull(),
+  description: text("description"),
+  subscriberAddress: text("subscriber_address").notNull().references(() => users.address),
+  providerAddress: text("provider_address").notNull(),
+  providerName: text("provider_name"),
+  providerUrl: text("provider_url"),
+  amount: text("amount").notNull(),
+  tokenType: text("token_type").default("ETH"),
+  frequency: text("frequency").notNull(), // daily, weekly, monthly
+  startDate: timestamp("start_date").defaultNow(),
+  endDate: timestamp("end_date"),
+  nextPaymentDue: timestamp("next_payment_due"),
+  totalPayments: integer("total_payments"),
+  completedPayments: integer("completed_payments").default(0),
+  spendingLimit: text("spending_limit"),
+  usageLimit: integer("usage_limit"),
+  renewalType: text("renewal_type").default("manual"), // manual, automatic
+  status: text("status").default("active"), // active, paused, cancelled, completed
+  categoryId: integer("category_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertSubscriptionSchema = createInsertSchema(subscriptions).pick({
+  teamId: true,
+  delegationId: true,
+  name: true,
+  description: true,
+  subscriberAddress: true,
+  providerAddress: true,
+  providerName: true,
+  providerUrl: true,
+  amount: true,
+  tokenType: true,
+  frequency: true,
+  startDate: true,
+  endDate: true,
+  nextPaymentDue: true,
+  totalPayments: true,
+  spendingLimit: true,
+  usageLimit: true,
+  renewalType: true,
+  categoryId: true,
+});
+
+// Subscription Category model
+export const subscriptionCategories = pgTable("subscription_categories", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  color: text("color"),
+  icon: text("icon"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertSubscriptionCategorySchema = createInsertSchema(subscriptionCategories).pick({
+  name: true,
+  description: true,
+  color: true,
+  icon: true,
+});
+
 // Export types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -148,3 +214,9 @@ export type InsertPaymentStream = z.infer<typeof insertPaymentStreamSchema>;
 
 export type Transaction = typeof transactions.$inferSelect;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
+
+export type Subscription = typeof subscriptions.$inferSelect;
+export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
+
+export type SubscriptionCategory = typeof subscriptionCategories.$inferSelect;
+export type InsertSubscriptionCategory = z.infer<typeof insertSubscriptionCategorySchema>;

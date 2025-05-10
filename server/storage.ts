@@ -4,7 +4,9 @@ import {
   TeamMember, InsertTeamMember,
   Delegation, InsertDelegation,
   PaymentStream, InsertPaymentStream,
-  Transaction, InsertTransaction
+  Transaction, InsertTransaction,
+  Subscription, InsertSubscription,
+  SubscriptionCategory, InsertSubscriptionCategory
 } from "@shared/schema";
 
 export interface IStorage {
@@ -41,6 +43,19 @@ export interface IStorage {
   getTransaction(id: number): Promise<Transaction | undefined>;
   createTransaction(transaction: InsertTransaction): Promise<Transaction>;
   listTransactions(teamId: number): Promise<Transaction[]>;
+  
+  // Subscription methods
+  getSubscription(id: number): Promise<Subscription | undefined>;
+  createSubscription(subscription: InsertSubscription): Promise<Subscription>;
+  listSubscriptions(teamId: number): Promise<Subscription[]>;
+  listSubscriptionsByUser(address: string): Promise<Subscription[]>;
+  updateSubscriptionStatus(id: number, status: string): Promise<Subscription>;
+  incrementSubscriptionPaymentCount(id: number): Promise<Subscription>;
+  
+  // Subscription Category methods
+  getSubscriptionCategory(id: number): Promise<SubscriptionCategory | undefined>;
+  createSubscriptionCategory(category: InsertSubscriptionCategory): Promise<SubscriptionCategory>;
+  listSubscriptionCategories(): Promise<SubscriptionCategory[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -50,6 +65,8 @@ export class MemStorage implements IStorage {
   private delegations: Map<number, Delegation>;
   private paymentStreams: Map<number, PaymentStream>;
   private transactions: Map<number, Transaction>;
+  private subscriptions: Map<number, Subscription>;
+  private subscriptionCategories: Map<number, SubscriptionCategory>;
   
   private userId = 1;
   private teamId = 1;
@@ -57,6 +74,8 @@ export class MemStorage implements IStorage {
   private delegationId = 1;
   private paymentStreamId = 1;
   private transactionId = 1;
+  private subscriptionId = 1;
+  private subscriptionCategoryId = 1;
 
   constructor() {
     this.users = new Map();
@@ -65,6 +84,8 @@ export class MemStorage implements IStorage {
     this.delegations = new Map();
     this.paymentStreams = new Map();
     this.transactions = new Map();
+    this.subscriptions = new Map();
+    this.subscriptionCategories = new Map();
     
     // Add some initial demo data
     this.initDemoData();
@@ -267,7 +288,117 @@ export class MemStorage implements IStorage {
   async listTransactions(teamId: number): Promise<Transaction[]> {
     return Array.from(this.transactions.values())
       .filter(transaction => transaction.teamId === teamId)
-      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()); // Sort by most recent
+      .sort((a, b) => {
+        const aTime = a.timestamp ? a.timestamp.getTime() : 0;
+        const bTime = b.timestamp ? b.timestamp.getTime() : 0;
+        return bTime - aTime;
+      }); // Sort by most recent
+  }
+
+  // Subscription methods
+  async getSubscription(id: number): Promise<Subscription | undefined> {
+    return this.subscriptions.get(id);
+  }
+
+  async createSubscription(subscription: InsertSubscription): Promise<Subscription> {
+    const newSubscription: Subscription = {
+      id: this.subscriptionId++,
+      teamId: subscription.teamId,
+      delegationId: subscription.delegationId,
+      name: subscription.name,
+      description: subscription.description || '',
+      subscriberAddress: subscription.subscriberAddress,
+      providerAddress: subscription.providerAddress,
+      providerName: subscription.providerName || '',
+      providerUrl: subscription.providerUrl || '',
+      amount: subscription.amount,
+      tokenType: subscription.tokenType || 'ETH',
+      frequency: subscription.frequency,
+      startDate: subscription.startDate || new Date(),
+      endDate: subscription.endDate,
+      nextPaymentDue: subscription.nextPaymentDue,
+      totalPayments: subscription.totalPayments,
+      completedPayments: 0,
+      spendingLimit: subscription.spendingLimit,
+      usageLimit: subscription.usageLimit,
+      renewalType: subscription.renewalType || 'manual',
+      status: 'active',
+      categoryId: subscription.categoryId,
+      createdAt: new Date(),
+    };
+    this.subscriptions.set(newSubscription.id, newSubscription);
+    return newSubscription;
+  }
+
+  async listSubscriptions(teamId: number): Promise<Subscription[]> {
+    return Array.from(this.subscriptions.values())
+      .filter(subscription => subscription.teamId === teamId)
+      .sort((a, b) => {
+        const aNext = a.nextPaymentDue ? a.nextPaymentDue.getTime() : Number.MAX_SAFE_INTEGER;
+        const bNext = b.nextPaymentDue ? b.nextPaymentDue.getTime() : Number.MAX_SAFE_INTEGER;
+        return aNext - bNext; // Sort by earliest payment due
+      });
+  }
+
+  async listSubscriptionsByUser(address: string): Promise<Subscription[]> {
+    return Array.from(this.subscriptions.values())
+      .filter(subscription => subscription.subscriberAddress === address);
+  }
+
+  async updateSubscriptionStatus(id: number, status: string): Promise<Subscription> {
+    const subscription = this.subscriptions.get(id);
+    if (!subscription) {
+      throw new Error(`Subscription with ID ${id} not found`);
+    }
+    
+    const updatedSubscription = { ...subscription, status };
+    this.subscriptions.set(id, updatedSubscription);
+    return updatedSubscription;
+  }
+
+  async incrementSubscriptionPaymentCount(id: number): Promise<Subscription> {
+    const subscription = this.subscriptions.get(id);
+    if (!subscription) {
+      throw new Error(`Subscription with ID ${id} not found`);
+    }
+    
+    const completedPayments = (subscription.completedPayments || 0) + 1;
+    
+    // Check if we've reached the total payments limit
+    let status = subscription.status;
+    if (subscription.totalPayments && completedPayments >= subscription.totalPayments) {
+      status = 'completed';
+    }
+    
+    const updatedSubscription = { 
+      ...subscription, 
+      completedPayments,
+      status
+    };
+    this.subscriptions.set(id, updatedSubscription);
+    return updatedSubscription;
+  }
+  
+  // Subscription Category methods
+  async getSubscriptionCategory(id: number): Promise<SubscriptionCategory | undefined> {
+    return this.subscriptionCategories.get(id);
+  }
+
+  async createSubscriptionCategory(category: InsertSubscriptionCategory): Promise<SubscriptionCategory> {
+    const newCategory: SubscriptionCategory = {
+      id: this.subscriptionCategoryId++,
+      name: category.name,
+      description: category.description || '',
+      color: category.color || '',
+      icon: category.icon || '',
+      createdAt: new Date(),
+    };
+    this.subscriptionCategories.set(newCategory.id, newCategory);
+    return newCategory;
+  }
+
+  async listSubscriptionCategories(): Promise<SubscriptionCategory[]> {
+    return Array.from(this.subscriptionCategories.values());
   }
 }
 
