@@ -14,6 +14,7 @@ This platform enables teams, DAOs, or collaborative projects to manage shared fi
 - **Automated Payment Streams**: Set up recurring payments without constant approval
 - **Chain of Delegation**: Support for multi-level delegation hierarchies
 - **Transaction Tracking**: Complete history and filtering of all wallet activities
+- **Delegated Subscription Manager**: Manage recurring crypto payments with delegated permissions
 
 ### AI-Enhanced Capabilities
 - **Spending Analysis**: AI-powered categorization and insights on spending patterns
@@ -67,6 +68,12 @@ This platform enables teams, DAOs, or collaborative projects to manage shared fi
 │   │   ├── hooks/         # Custom React hooks
 │   │   ├── lib/           # Utility functions
 │   │   ├── pages/         # Page components
+│   │   │   ├── Dashboard.tsx      # Main dashboard view
+│   │   │   ├── Delegations.tsx    # Delegations management
+│   │   │   ├── Subscriptions.tsx  # Subscription management
+│   │   │   ├── TeamMembers.tsx    # Team management
+│   │   │   ├── Transactions.tsx   # Transaction history
+│   │   │   └── Settings.tsx       # Application settings
 │   │   └── providers/     # Context providers
 ├── server/                # Backend Express application
 │   ├── services/          # Backend services
@@ -90,6 +97,15 @@ This platform enables teams, DAOs, or collaborative projects to manage shared fi
 - `GET /api/delegations`: List delegations
 - `PATCH /api/delegations/:id`: Update delegation status
 
+### Subscription Management
+- `POST /api/subscriptions`: Create a new subscription
+- `GET /api/subscriptions`: List subscriptions by team or user
+- `GET /api/subscriptions/:id`: Get subscription details
+- `PATCH /api/subscriptions/:id/status`: Update subscription status
+- `POST /api/subscriptions/:id/increment-payment`: Track completed payments
+- `POST /api/subscription-categories`: Create a subscription category
+- `GET /api/subscription-categories`: List subscription categories
+
 ### AI Features
 - `POST /api/ai/analyze-spending`: Get spending analysis
 - `POST /api/ai/suggest-delegations`: Get delegation suggestions
@@ -103,6 +119,9 @@ This platform enables teams, DAOs, or collaborative projects to manage shared fi
 - **Multi-chain Support**: Extend delegation across multiple blockchains
 - **Custom AI Training**: Domain-specific AI training for Web3 financial concepts
 - **Mobile Application**: Native mobile experience for on-the-go delegation management
+- **Subscription Recommendations**: AI-powered subscription optimization suggestions
+- **Smart Subscription Triggers**: Conditional subscriptions based on on-chain events
+- **Subscription Templates**: Pre-defined subscription configurations for common use cases
 
 ## License
 

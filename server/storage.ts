@@ -105,7 +105,7 @@ export class MemStorage implements IStorage {
       id: this.userId++,
       address: user.address,
       username: user.username || `User ${this.userId}`,
-      avatarUrl: user.avatarUrl,
+      avatarUrl: user.avatarUrl || null,
       createdAt: new Date(),
     };
     this.users.set(user.address, newUser);
@@ -192,7 +192,7 @@ export class MemStorage implements IStorage {
       allowedActions: delegation.allowedActions || {},
       active: true,
       createdAt: new Date(),
-      expiresAt: delegation.expiresAt,
+      expiresAt: delegation.expiresAt || null,
     };
     this.delegations.set(newDelegation.id, newDelegation);
     return newDelegation;
